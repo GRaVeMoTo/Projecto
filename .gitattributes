@@ -1,0 +1,9 @@
+# Alapértelmezett viselkedés: automatikus sorvég-kezelés
+* text=auto
+
+# uv.lock és pyproject.toml mindig LF legyen
+uv.lock      text eol=lf
+pyproject.toml text eol=lf
+
+# Shell scriptek is LF
+*.sh text eol=lf

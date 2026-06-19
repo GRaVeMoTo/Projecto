@@ -21,7 +21,7 @@ cd Projecto
 
 # Install dependencies
 uv sync
-
+```
 
 ## API Overview
 

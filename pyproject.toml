@@ -9,12 +9,14 @@ dependencies = [
     "fastapi>=0.137.1",
     "httpx>=0.28.1",
     "mypy>=2.1.0",
+    "psycopg[binary,pool]>=3.3.4",
     "pydantic-settings>=2.14.1",
     "pytest>=9.1.0",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "ruff>=0.15.17",
-    "sqlalchemy>=2.0.51",
+    "sqlalchemy[asyncio]>=2.0.51",
+    "uv>=0.11.22",
     "uvicorn>=0.49.0",
 ]
 
@@ -23,10 +25,12 @@ dev = [
     "httpx>=0.28.1",
     "pytest-asyncio>=1.4.0",
 ]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["projecto"]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 
 [tool.ruff]
 line-length = 100

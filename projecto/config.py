@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     app_host: str = "0.0.0.0"  # noqa: S104
     app_port: int = 8000
 
+    # Database
+    database_url: str = ""
 
 @lru_cache
 def get_settings() -> Settings:

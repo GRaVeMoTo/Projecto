@@ -219,3 +219,5 @@ __marimo__/
 
 # Projecto
 *.bak
+temp/
+.codemie

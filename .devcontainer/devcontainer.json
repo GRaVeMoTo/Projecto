@@ -1,0 +1,17 @@
+{
+  "name": "Projecto DC",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "api",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "forwardPorts": [8000, 5432]
+}

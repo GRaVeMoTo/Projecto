@@ -1,0 +1,31 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/workspace
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:P0stgr3s@db:5432/projectodb
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: P0stgr3s
+      POSTGRES_DB: projectodb
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql # Recommended (both DOI 18+ and DHI all versions)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+volumes:
+  pgdata:

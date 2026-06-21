@@ -23,6 +23,7 @@ async_session_maker = async_sessionmaker(
     autoflush=False,
 )
 
+
 class Base(DeclarativeBase):
     pass
 
@@ -35,14 +36,17 @@ async def get_session() -> AsyncIterator[AsyncSession]:
             await session.rollback()
             raise
 
+
 def configure_platform_event_loop_policy() -> None:
     # Windows fix
     if sys.platform == "win32":
         import asyncio
         import warnings
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             policy = asyncio.WindowsSelectorEventLoopPolicy()  # type: ignore[attr-defined]
             asyncio.set_event_loop_policy(policy)
+
 
 configure_platform_event_loop_policy()

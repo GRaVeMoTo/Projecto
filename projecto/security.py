@@ -1,5 +1,6 @@
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 from pwdlib import PasswordHash
@@ -17,7 +18,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return password_hash_helper.verify(plain_password, hashed_password)
 
 
-def create_access_token(data: dict) -> str:
+def create_access_token(data: dict[str, object]) -> str:
     to_encode = data.copy()
     expire = datetime.now(UTC) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update(
@@ -30,14 +31,14 @@ def create_access_token(data: dict) -> str:
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
-def verify_jwt_token(token: str, expected_type: str = "access") -> dict:
+def verify_jwt_token(token: str, expected_type: str = "access") -> dict[str, Any]:
     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     if payload.get("type") != expected_type:
         raise jwt.InvalidTokenError("Invalid token type")
     return payload
 
 
-def decode_access_token(token: str) -> dict:
+def decode_access_token(token: str) -> dict[str, Any]:
     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     if payload.get("type") != "access":
         raise jwt.InvalidTokenError("Invalid token type")

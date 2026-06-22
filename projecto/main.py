@@ -6,6 +6,7 @@ from fastapi import APIRouter, FastAPI
 from projecto.auth.router import router as auth_router
 from projecto.exceptions import register_exception_handlers
 from projecto.logging import configure_logging, get_logger
+from projecto.projects.router import router as projects_router
 
 logger = get_logger(__name__)
 
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
 
     api_router = APIRouter()
     api_router.include_router(auth_router)
+    api_router.include_router(projects_router)
     app.include_router(api_router)
 
     @app.get("/health", tags=["health"])

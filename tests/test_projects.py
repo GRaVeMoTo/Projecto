@@ -28,6 +28,17 @@ async def test_create_project_requires_auth(client: AsyncClient) -> None:
     assert response.status_code == 401
 
 
+async def test_create_project_rejects_empty_name(client: AsyncClient) -> None:
+    """Creating a project with an empty name fails validation."""
+    auth = await register_and_login(client, "alice")
+    response = await client.post(
+        "/projects",
+        json={"name": "", "description": ""},
+        headers={"Authorization": auth},
+    )
+    assert response.status_code == 422
+
+
 async def test_list_projects_only_returns_accessible(client: AsyncClient) -> None:
     """Listing returns only projects the user is a member of."""
     alice = await register_and_login(client, "alice")
@@ -105,6 +116,43 @@ async def test_update_project(client: AsyncClient) -> None:
     assert response.json()["description"] == "new"
 
 
+async def test_update_project_rejects_empty_name(client: AsyncClient) -> None:
+    """Updating a project with an empty name fails validation."""
+    auth = await register_and_login(client, "alice")
+    created = await client.post(
+        "/projects",
+        json={"name": "Valid", "description": "ok"},
+        headers={"Authorization": auth},
+    )
+    project_id = created.json()["id"]
+
+    response = await client.put(
+        f"/projects/{project_id}/info",
+        json={"name": "", "description": "still ok"},
+        headers={"Authorization": auth},
+    )
+    assert response.status_code == 422
+
+
+async def test_update_project_requires_access(client: AsyncClient) -> None:
+    """A non-member cannot update another user's project."""
+    alice = await register_and_login(client, "alice")
+    bob = await register_and_login(client, "bob")
+    created = await client.post(
+        "/projects",
+        json={"name": "Secret", "description": "hidden"},
+        headers={"Authorization": alice},
+    )
+    project_id = created.json()["id"]
+
+    response = await client.put(
+        f"/projects/{project_id}/info",
+        json={"name": "Bob edit", "description": "nope"},
+        headers={"Authorization": bob},
+    )
+    assert response.status_code == 403
+
+
 async def test_delete_project_as_owner(client: AsyncClient) -> None:
     """Owner can delete a project."""
     auth = await register_and_login(client, "alice")
@@ -120,6 +168,10 @@ async def test_delete_project_as_owner(client: AsyncClient) -> None:
 
     after = await client.get(f"/projects/{project_id}/info", headers={"Authorization": auth})
     assert after.status_code == 404
+
+    listed = await client.get("/projects", headers={"Authorization": auth})
+    assert listed.status_code == 200
+    assert listed.json() == []
 
 
 async def test_delete_project_requires_owner(client: AsyncClient) -> None:

@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_HOUR: int = 1
 
+    # Document storage
+    storage_path: str = "./storage"
+
 
 @lru_cache
 def get_settings() -> Settings:

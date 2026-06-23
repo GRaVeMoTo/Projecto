@@ -6,11 +6,11 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
 from projecto.config import settings
 from projecto.database import Base
 from projecto.auth import models as _auth_models  # noqa: F401
 from projecto.projects import models as _projects_models  # noqa: F401
+from projecto.documents import models as _documents_models  # noqa: F401
 
 config = context.config
 

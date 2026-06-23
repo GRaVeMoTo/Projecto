@@ -1,4 +1,7 @@
-from collections.abc import AsyncIterator
+import shutil
+import tempfile
+from collections.abc import AsyncIterator, Iterator
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -31,9 +34,9 @@ def anyio_backend():
 TEST_DATABASE_URL = settings.database_url.rsplit("/", 1)[0] + "/projecto_test"
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 async def db_engine() -> AsyncIterator[AsyncEngine]:
-    """Create a fresh schema for each test against the test database."""
+    """Provide a shared async engine backed by the test database."""
     engine = create_async_engine(TEST_DATABASE_URL)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -42,6 +45,15 @@ async def db_engine() -> AsyncIterator[AsyncEngine]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def reset_database(db_engine: AsyncEngine) -> AsyncIterator[None]:
+    """Ensure each test starts from a clean schema state."""
+    async with db_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 
 @pytest.fixture
@@ -70,6 +82,19 @@ async def client(db_engine: AsyncEngine) -> AsyncIterator[AsyncClient]:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def isolated_storage_root() -> Iterator[str]:
+    """Point LocalStorage to a per-session temporary directory."""
+    original_path = settings.storage_path
+    tmp_dir = Path(tempfile.mkdtemp(prefix="projecto-storage-"))
+    settings.storage_path = str(tmp_dir)
+    try:
+        yield settings.storage_path
+    finally:
+        settings.storage_path = original_path
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 async def register_and_login(client: AsyncClient, login: str, password: str = "s3cr3tpass") -> str:

@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Projecto
+*.bak
+temp/
+.codemie
+
+# Projecto - local document storage (runtime data)
+storage/*
+!storage/.gitkeep

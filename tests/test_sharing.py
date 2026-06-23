@@ -95,3 +95,66 @@ async def test_invite_duplicate_member_returns_conflict(client: AsyncClient) -> 
     )
     assert duplicate.status_code == 409
     assert duplicate.json()["detail"] == "User is already a member of this project."
+
+
+async def test_invite_missing_project_returns_not_found(client: AsyncClient) -> None:
+    """Inviting on a non-existent project yields 404."""
+    owner = await register_and_login(client, "alice")
+    await register_and_login(client, "bob")
+
+    response = await client.post(
+        "/projects/999/invite",
+        params={"user": "bob"},
+        headers={"Authorization": owner},
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found."
+
+
+async def test_invite_by_non_member_forbidden(client: AsyncClient) -> None:
+    """Users without membership cannot invite others."""
+    owner = await register_and_login(client, "alice")
+    stranger = await register_and_login(client, "eve")
+    await register_and_login(client, "bob")
+    project_id = await create_project(client, owner)
+
+    response = await client.post(
+        f"/projects/{project_id}/invite",
+        params={"user": "bob"},
+        headers={"Authorization": stranger},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "You do not have access to this project."
+
+
+async def test_invited_user_can_access_project_after_invite(client: AsyncClient) -> None:
+    """Inviting a user grants them access to the project list."""
+    owner = await register_and_login(client, "alice")
+    invitee = await register_and_login(client, "bob")
+    project_id = await create_project(client, owner, name="Shared project")
+
+    response = await client.post(
+        f"/projects/{project_id}/invite",
+        params={"user": "bob"},
+        headers={"Authorization": owner},
+    )
+    assert response.status_code == 201
+
+    listing = await client.get("/projects", headers={"Authorization": invitee})
+    assert listing.status_code == 200
+    projects = listing.json()
+    assert any(project["id"] == project_id for project in projects)
+
+
+async def test_owner_cannot_invite_themselves(client: AsyncClient) -> None:
+    """Owner inviting their own login returns conflict."""
+    owner = await register_and_login(client, "alice")
+    project_id = await create_project(client, owner)
+
+    response = await client.post(
+        f"/projects/{project_id}/invite",
+        params={"user": "alice"},
+        headers={"Authorization": owner},
+    )
+    assert response.status_code == 409
+    assert response.json()["detail"] == "User is already a member of this project."

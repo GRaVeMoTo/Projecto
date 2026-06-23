@@ -221,3 +221,7 @@ __marimo__/
 *.bak
 temp/
 .codemie
+
+# Projecto - local document storage (runtime data)
+storage/*
+!storage/.gitkeep

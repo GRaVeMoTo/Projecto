@@ -56,7 +56,7 @@ jobs:
 
     env:
       APP_ENV: testing
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/projecto
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/projecto_test
       SECRET_KEY: test-secret-key-with-at-least-32-characters
       STORAGE_PATH: /tmp/projecto-storage
 

@@ -28,8 +28,7 @@ class Settings(BaseSettings):
     # auth
     SECRET_KEY: str = Field(..., min_length=32)
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
-    REFRESH_TOKEN_EXPIRE_HOUR: int = 1
+    ACCESS_TOKEN_EXPIRE_HOURS: int = 12
 
     # Document storage
     storage_path: str = "./storage"

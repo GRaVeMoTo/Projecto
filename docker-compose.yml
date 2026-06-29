@@ -6,7 +6,10 @@ services:
     volumes:
       - .:/workspace
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:P0stgr3s@db:5432/projectodb
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:-P0stgr3s}@db:5432/${POSTGRES_DB:-projectodb}
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
+      STORAGE_PATH: ${STORAGE_PATH:-/app/storage}
     depends_on:
       db:
         condition: service_healthy
@@ -14,9 +17,9 @@ services:
   db:
     image: postgres:18.4-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: P0stgr3s
-      POSTGRES_DB: projectodb
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-P0stgr3s}
+      POSTGRES_DB: ${POSTGRES_DB:-projectodb}
 
     ports:
       - "5432:5432"

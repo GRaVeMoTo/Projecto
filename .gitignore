@@ -225,3 +225,11 @@ temp/
 # Projecto - local document storage (runtime data)
 storage/*
 !storage/.gitkeep
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl

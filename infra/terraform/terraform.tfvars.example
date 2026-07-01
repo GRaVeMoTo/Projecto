@@ -6,3 +6,15 @@ ecr_repository_name = "projecto"
 
 # Set this only if your AWS account already has a GitHub OIDC provider.
 # github_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+
+# Optional short-lived free-tier style test host.
+# Enable only when you want to run the ECR image on EC2 with a Postgres container.
+test_enabled   = false
+test_image_tag = "v1.0.0"
+
+# Restrict this to your own IP for safer tests, for example ["203.0.113.10/32"].
+test_http_cidr_blocks = ["0.0.0.0/0"]
+
+# Keep SSH closed by default. Set test_key_name and a /32 CIDR if you need SSH.
+test_ssh_cidr_blocks = []
+# test_key_name = "your-ec2-key-pair"

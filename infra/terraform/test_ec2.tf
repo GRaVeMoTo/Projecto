@@ -1,13 +1,13 @@
 locals {
   test_container_name = "projecto-api"
-  test_database_url = format(
+  test_database_url = var.test_enabled ? format(
     "postgresql+psycopg://%s:%s@projecto-db:5432/%s",
     var.test_postgres_user,
     local.test_postgres_password,
     var.test_postgres_db,
-  )
-  test_postgres_password = var.test_postgres_password != null ? var.test_postgres_password : random_password.test_postgres[0].result
-  test_secret_key        = var.test_secret_key != null ? var.test_secret_key : random_password.test_secret_key[0].result
+  ) : ""
+  test_postgres_password = var.test_postgres_password != null ? var.test_postgres_password : try(random_password.test_postgres[0].result, "")
+  test_secret_key        = var.test_secret_key != null ? var.test_secret_key : try(random_password.test_secret_key[0].result, "")
 }
 
 resource "random_password" "test_postgres" {
@@ -155,6 +155,12 @@ resource "aws_iam_role_policy_attachment" "test_ecr_pull" {
   policy_arn = aws_iam_policy.test_ecr_pull[0].arn
 }
 
+resource "aws_iam_role_policy_attachment" "test_ssm" {
+  count      = var.test_enabled ? 1 : 0
+  role       = aws_iam_role.test[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "test" {
   count = var.test_enabled ? 1 : 0
   name  = "projecto-test-ec2"
@@ -199,5 +205,6 @@ resource "aws_instance" "test" {
 
   depends_on = [
     aws_iam_role_policy_attachment.test_ecr_pull,
+    aws_iam_role_policy_attachment.test_ssm,
   ]
 }

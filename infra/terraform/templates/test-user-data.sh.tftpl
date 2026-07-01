@@ -4,7 +4,7 @@ set -euo pipefail
 exec > >(tee /var/log/projecto-test-bootstrap.log | logger -t projecto-test-bootstrap -s 2>/dev/console) 2>&1
 
 PROJECTO_DIR="/opt/projecto"
-POSTGRES_VOLUME="projecto-postgres-data"
+POSTGRES_VOLUME="projecto-postgres-18-data"
 STORAGE_VOLUME="projecto-storage"
 NETWORK="projecto-test"
 IMAGE="${ecr_repository_url}:${image_tag}"
@@ -40,7 +40,7 @@ docker run -d \
   --name projecto-db \
   --network "$NETWORK" \
   --env-file "$PROJECTO_DIR/postgres.env" \
-  -v "$POSTGRES_VOLUME:/var/lib/postgresql/data" \
+  -v "$POSTGRES_VOLUME:/var/lib/postgresql" \
   --restart unless-stopped \
   postgres:18.4-alpine
 

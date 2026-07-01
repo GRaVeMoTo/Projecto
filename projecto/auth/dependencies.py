@@ -4,7 +4,7 @@ from typing import Annotated
 
 import jwt
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from projecto.auth.models import User
@@ -13,17 +13,17 @@ from projecto.database import get_session
 from projecto.exceptions import UnauthorizedError
 from projecto.security import decode_access_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 DbSession = Annotated[AsyncSession, Depends(get_session)]
-BearerToken = Annotated[str | None, Depends(oauth2_scheme)]
+BearerToken = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)]
 
 
-def get_token_subject(token: BearerToken) -> str:
+def get_token_subject(credentials: BearerToken) -> str:
     """Extract and validate the subject (login) from a bearer token.
 
     Args:
-        token: The bearer token from the Authorization header.
+        credentials: The bearer credentials from the Authorization header.
 
     Returns:
         The token subject (user login).
@@ -31,11 +31,11 @@ def get_token_subject(token: BearerToken) -> str:
     Raises:
         UnauthorizedError: If the token is missing or invalid.
     """
-    if token is None:
+    if credentials is None:
         raise UnauthorizedError("Authentication required.")
 
     try:
-        claims = decode_access_token(token)
+        claims = decode_access_token(credentials.credentials)
     except jwt.InvalidTokenError:
         raise UnauthorizedError("Invalid authentication token.") from None
     subject = claims.get("sub")

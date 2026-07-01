@@ -1,0 +1,65 @@
+#!/bin/bash
+set -euo pipefail
+
+exec > >(tee /var/log/projecto-test-bootstrap.log | logger -t projecto-test-bootstrap -s 2>/dev/console) 2>&1
+
+PROJECTO_DIR="/opt/projecto"
+POSTGRES_VOLUME="projecto-postgres-18-data"
+STORAGE_VOLUME="projecto-storage"
+NETWORK="projecto-test"
+IMAGE="${ecr_repository_url}:${image_tag}"
+
+dnf update -y
+dnf install -y docker awscli
+systemctl enable --now docker
+
+mkdir -p "$PROJECTO_DIR"
+cat > "$PROJECTO_DIR/app.env" <<'ENV'
+APP_ENV=testing
+DATABASE_URL=${database_url}
+SECRET_KEY=${secret_key}
+STORAGE_PATH=/app/storage
+ENV
+
+cat > "$PROJECTO_DIR/postgres.env" <<'ENV'
+POSTGRES_USER=${postgres_user}
+POSTGRES_PASSWORD=${postgres_password}
+POSTGRES_DB=${postgres_db}
+ENV
+
+aws ecr get-login-password --region ${aws_region} \
+  | docker login --username AWS --password-stdin ${aws_account_id}.dkr.ecr.${aws_region}.amazonaws.com
+
+docker network create "$NETWORK" || true
+docker volume create "$POSTGRES_VOLUME"
+docker volume create "$STORAGE_VOLUME"
+
+docker rm -f projecto-db ${container_name} || true
+
+docker run -d \
+  --name projecto-db \
+  --network "$NETWORK" \
+  --env-file "$PROJECTO_DIR/postgres.env" \
+  -v "$POSTGRES_VOLUME:/var/lib/postgresql" \
+  --restart unless-stopped \
+  postgres:18.4-alpine
+
+until docker exec projecto-db pg_isready -U ${postgres_user} -d ${postgres_db}; do
+  sleep 2
+done
+
+docker pull "$IMAGE"
+
+docker run --rm \
+  --network "$NETWORK" \
+  --env-file "$PROJECTO_DIR/app.env" \
+  "$IMAGE" alembic upgrade head
+
+docker run -d \
+  --name ${container_name} \
+  --network "$NETWORK" \
+  --env-file "$PROJECTO_DIR/app.env" \
+  -v "$STORAGE_VOLUME:/app/storage" \
+  -p 8000:8000 \
+  --restart unless-stopped \
+  "$IMAGE"
